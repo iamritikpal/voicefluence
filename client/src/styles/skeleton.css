@@ -1,0 +1,81 @@
+/* ===== DASHBOARD SKELETON ===== */
+.dashboard-skeleton {
+  padding: 2rem 1.5rem 4rem;
+  min-height: calc(100vh - 60px);
+}
+
+.skeleton-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.skeleton-agent-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  padding: 3rem 1.5rem 2rem;
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.skeleton-visual {
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skeleton-orb {
+  flex-shrink: 0;
+}
+
+.skeleton-message {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.skeleton-line {
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-line:first-child {
+  width: 100% !important;
+}
+
+.skeleton-controls {
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skeleton-mic {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .dashboard-skeleton {
+    padding: 1.25rem 1rem 3rem;
+  }
+
+  .skeleton-agent-section {
+    padding: 2rem 1rem;
+  }
+
+  .skeleton-visual {
+    width: 150px;
+    height: 150px;
+  }
+
+  .skeleton-orb {
+    width: 100px !important;
+    height: 100px !important;
+  }
+}

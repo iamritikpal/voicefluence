@@ -1,7 +1,21 @@
 /* ===== DASHBOARD ===== */
 .dashboard {
-  padding: 2rem 1.5rem 4rem;
   min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.dashboard-main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 2rem 1.5rem 4rem;
 }
 
 .dashboard-container {
@@ -549,8 +563,18 @@
 }
 
 /* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+
+  .dashboard-main {
+    padding: 1rem;
+  }
+}
+
 @media (max-width: 640px) {
-  .dashboard {
+  .dashboard-main {
     padding: 1.25rem 1rem 3rem;
   }
 

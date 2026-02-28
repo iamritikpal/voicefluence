@@ -5,6 +5,32 @@
   align-items: center;
   gap: 2rem;
   padding: 3rem 1.5rem 2rem;
+  position: relative;
+}
+
+.voice-agent[role="button"] {
+  cursor: pointer;
+}
+
+.click-to-hear-banner {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 1rem;
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 999px;
+  white-space: nowrap;
+  z-index: 10;
+  box-shadow: 0 2px 12px rgba(79, 70, 229, 0.35);
+  cursor: pointer;
+}
+
+.click-to-hear-banner:hover {
+  background: var(--color-primary-hover);
 }
 
 /* ===== ORB VISUAL ===== */

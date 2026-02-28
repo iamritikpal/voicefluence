@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Onboarding from './pages/Onboarding';
@@ -41,6 +41,9 @@ function App() {
 
   const needsOnboarding = user && !user.onboardingComplete;
   const defaultRoute = !user ? '/login' : needsOnboarding ? '/onboarding' : '/dashboard';
+  const location = useLocation();
+  const isDashboard = location.pathname === '/dashboard';
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) {
     return (
@@ -52,8 +55,13 @@ function App() {
   }
 
   return (
-    <Router>
-      {user && !needsOnboarding && <Navbar user={user} onLogout={handleLogout} />}
+    <>
+      {user && !needsOnboarding && (
+        <Navbar
+          showMenuButton={isDashboard}
+          onMenuClick={() => setSidebarOpen(true)}
+        />
+      )}
       <Routes>
         <Route
           path="/login"
@@ -83,7 +91,7 @@ function App() {
             ) : needsOnboarding ? (
               <Navigate to="/onboarding" />
             ) : (
-              <Dashboard user={user} setUser={setUser} />
+              <Dashboard user={user} setUser={setUser} onLogout={handleLogout} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
             )
           }
         />
@@ -101,7 +109,7 @@ function App() {
         />
         <Route path="*" element={<Navigate to={defaultRoute} />} />
       </Routes>
-    </Router>
+    </>
   );
 }
 

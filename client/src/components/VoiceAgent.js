@@ -1,6 +1,8 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import api from '../services/api';
 import '../styles/voiceagent.css';
+
+let sessionCounter = 0;
 
 function VoiceAgent({ onAudioReady, generating, userName }) {
   const [phase, setPhase] = useState('greeting');
@@ -10,6 +12,7 @@ function VoiceAgent({ onAudioReady, generating, userName }) {
   const [duration, setDuration] = useState(0);
   const [audioUrl, setAudioUrl] = useState(null);
   const [audioBlob, setAudioBlob] = useState(null);
+  const [clickToHear, setClickToHear] = useState(false);
 
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
@@ -17,11 +20,17 @@ function VoiceAgent({ onAudioReady, generating, userName }) {
   const typewriterRef = useRef(null);
   const ttsAudioRef = useRef(null);
   const ttsResolveRef = useRef(null);
-  const greetingCancelledRef = useRef(false);
+  const sessionRef = useRef(0);
+  const abortRef = useRef(null);
+  const audioUnlockedRef = useRef(false);
 
   const firstName = userName ? userName.split(' ')[0] : 'there';
 
-  const stopTts = useCallback(() => {
+  function stopCurrentTts() {
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
     if (ttsAudioRef.current) {
       ttsAudioRef.current.pause();
       ttsAudioRef.current.currentTime = 0;
@@ -32,116 +41,182 @@ function VoiceAgent({ onAudioReady, generating, userName }) {
       ttsResolveRef.current = null;
     }
     setSpeaking(false);
-  }, []);
+  }
 
-  const speak = useCallback(async (text) => {
-    stopTts();
+  function stopTypewriter() {
+    if (typewriterRef.current) {
+      clearTimeout(typewriterRef.current);
+      typewriterRef.current = null;
+    }
+  }
+
+  async function speakText(text, session) {
+    stopCurrentTts();
+    if (sessionRef.current !== session) return;
+
     setSpeaking(true);
-    ttsResolveRef.current = null;
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
-      const res = await api.post('/tts/speak', { text }, { responseType: 'blob' });
-      if (greetingCancelledRef.current) {
+      const res = await api.post('/tts/speak', { text }, {
+        responseType: 'blob',
+        signal: controller.signal,
+      });
+
+      if (sessionRef.current !== session) {
         setSpeaking(false);
         return;
       }
+
       const blob = new Blob([res.data], { type: 'audio/mpeg' });
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       ttsAudioRef.current = audio;
+      abortRef.current = null;
 
-      return new Promise((resolve) => {
+      await new Promise((resolve) => {
         ttsResolveRef.current = resolve;
         const done = () => {
-          if (ttsAudioRef.current === audio) {
-            ttsAudioRef.current = null;
-          }
-          if (ttsResolveRef.current === resolve) {
-            ttsResolveRef.current = null;
-          }
+          if (ttsAudioRef.current === audio) ttsAudioRef.current = null;
+          if (ttsResolveRef.current === resolve) ttsResolveRef.current = null;
           URL.revokeObjectURL(url);
           setSpeaking(false);
           resolve();
         };
-        audio.onended = done;
+        audio.onended = () => {
+          audioUnlockedRef.current = true;
+          setClickToHear(false);
+          done();
+        };
         audio.onerror = done;
-        audio.play().catch(done);
+        audio.play().then(() => {}).catch(() => {
+          if (!audioUnlockedRef.current) setClickToHear(true);
+          done();
+        });
       });
-    } catch {
+    } catch (err) {
+      if (err && err.name === 'CanceledError') {
+        // expected when session changes
+      }
       setSpeaking(false);
     }
-  }, [stopTts]);
+  }
 
-  const typeText = useCallback((text, onDone) => {
-    clearTimeout(typewriterRef.current);
-    typewriterRef.current = null;
+  function typewriterAnimate(text, session) {
+    stopTypewriter();
+    if (sessionRef.current !== session) return;
     setDisplayedText('');
     let i = 0;
     const step = () => {
-      if (greetingCancelledRef.current) return;
+      if (sessionRef.current !== session) return;
       if (i <= text.length) {
         setDisplayedText(text.slice(0, i));
         i++;
         typewriterRef.current = setTimeout(step, 28);
-      } else {
-        typewriterRef.current = null;
-        if (onDone) onDone();
       }
     };
     step();
-  }, []);
+  }
 
-  const speakAndType = useCallback(async (text) => {
-    typeText(text);
-    await speak(text);
-    if (!greetingCancelledRef.current) {
+  async function speakAndType(text, session) {
+    if (sessionRef.current !== session) return;
+    typewriterAnimate(text, session);
+    await speakText(text, session);
+    if (sessionRef.current === session) {
+      stopTypewriter();
       setDisplayedText(text);
     }
-  }, [speak, typeText]);
+  }
 
-  useEffect(() => {
-    greetingCancelledRef.current = false;
-    let active = true;
+  async function speakLine(text) {
+    const session = sessionRef.current;
+    setDisplayedText(text);
+    await speakText(text, session);
+  }
 
-    const greetingLines = [
+  function unlockAudio() {
+    const silentWav = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+    const a = new Audio(silentWav);
+    a.play().catch(() => {});
+    audioUnlockedRef.current = true;
+    setClickToHear(false);
+  }
+
+  async function runGreeting(session) {
+    const lines = [
       `Hi ${firstName}! I'm ready to turn your thoughts into a powerful LinkedIn post.`,
       "What's on your mind today? Share an insight, a story, or an opinion.",
       "Tap the mic when you're ready. I'll handle the rest.",
     ];
+    for (let i = 0; i < lines.length; i++) {
+      if (sessionRef.current !== session) return;
+      await speakAndType(lines[i], session);
+      if (sessionRef.current !== session) return;
+      if (i < lines.length - 1) {
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    }
+    if (sessionRef.current === session) setPhase('idle');
+  }
 
+  function handleUnlockAndPlay() {
+    if (!clickToHear && audioUnlockedRef.current) return;
+    unlockAudio();
+    setClickToHear(false);
+    sessionCounter++;
+    const session = sessionCounter;
+    sessionRef.current = session;
+    setPhase('greeting');
+    setDisplayedText('');
+    stopTypewriter();
+    stopCurrentTts();
+    runGreeting(session);
+  }
+
+  useEffect(() => {
+    sessionCounter++;
+    const session = sessionCounter;
+    sessionRef.current = session;
+    const lines = [
+      `Hi ${firstName}! I'm ready to turn your thoughts into a powerful LinkedIn post.`,
+      "What's on your mind today? Share an insight, a story, or an opinion.",
+      "Tap the mic when you're ready. I'll handle the rest.",
+    ];
     (async () => {
-      for (let i = 0; i < greetingLines.length; i++) {
-        if (!active || greetingCancelledRef.current) return;
-        await speakAndType(greetingLines[i]);
-        if (!active || greetingCancelledRef.current) return;
-        if (i < greetingLines.length - 1) {
+      for (let i = 0; i < lines.length; i++) {
+        if (sessionRef.current !== session) return;
+        await speakAndType(lines[i], session);
+        if (sessionRef.current !== session) return;
+        if (i < lines.length - 1) {
           await new Promise((r) => setTimeout(r, 500));
         }
       }
-      if (active && !greetingCancelledRef.current) setPhase('idle');
+      if (sessionRef.current === session) setPhase('idle');
     })();
-
     return () => {
-      active = false;
-      clearTimeout(typewriterRef.current);
-      typewriterRef.current = null;
-      stopTts();
+      sessionRef.current = -1;
+      stopTypewriter();
+      stopCurrentTts();
     };
-  }, [firstName, speakAndType, stopTts]);
+  }, []);
 
-  const speakLine = useCallback(async (text) => {
-    setDisplayedText(text);
-    await speak(text);
-  }, [speak]);
-
-  const startRecording = useCallback(async () => {
-    greetingCancelledRef.current = true;
-    stopTts();
-    clearTimeout(typewriterRef.current);
-    typewriterRef.current = null;
+  const startRecording = async () => {
+    sessionCounter++;
+    sessionRef.current = sessionCounter;
+    stopCurrentTts();
+    stopTypewriter();
     setPhase('recording');
+
+    const session = sessionRef.current;
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (sessionRef.current !== session) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus',
       });
@@ -169,7 +244,6 @@ function VoiceAgent({ onAudioReady, generating, userName }) {
       mediaRecorder.start(1000);
       setRecording(true);
       setDisplayedText("I'm listening... take your time.");
-      speakLine("I'm listening... take your time.");
 
       timerRef.current = setInterval(() => {
         setDuration((prev) => prev + 1);
@@ -178,7 +252,7 @@ function VoiceAgent({ onAudioReady, generating, userName }) {
       setPhase('idle');
       setDisplayedText('I need microphone access to record. Please allow permissions and try again.');
     }
-  }, [stopTts, speakLine]);
+  };
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && recording) {
@@ -220,7 +294,12 @@ function VoiceAgent({ onAudioReady, generating, userName }) {
     .join(' ');
 
   return (
-    <div className="voice-agent">
+    <div className="voice-agent" onClick={clickToHear ? handleUnlockAndPlay : undefined} role={clickToHear ? 'button' : undefined} tabIndex={clickToHear ? 0 : undefined} onKeyDown={clickToHear ? (e) => e.key === 'Enter' && handleUnlockAndPlay() : undefined}>
+      {clickToHear && (
+        <div className="click-to-hear-banner" onClick={(e) => { e.stopPropagation(); handleUnlockAndPlay(); }}>
+          Click here to hear greeting
+        </div>
+      )}
       <div className="agent-visual">
         <div className={orbClass}>
           <div className="orb-glow" />
@@ -248,9 +327,13 @@ function VoiceAgent({ onAudioReady, generating, userName }) {
         {(phase === 'idle' || phase === 'greeting') && (
           <button
             className="mic-btn"
-            onClick={startRecording}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (clickToHear) handleUnlockAndPlay();
+              else startRecording();
+            }}
             disabled={generating}
-            title="Start recording"
+            title={clickToHear ? 'Click to hear greeting' : 'Start recording'}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />

@@ -1,18 +1,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-function Navbar({ user, onLogout }) {
+function Navbar({ user, onLogout, onMenuClick, showMenuButton }) {
   return (
     <nav className="navbar">
       <div className="navbar-inner">
-        <Link to="/dashboard" className="navbar-brand">Voicefluence</Link>
-        <div className="navbar-right">
-          <Link to="/profile" className="navbar-link">Profile</Link>
-          <span className="navbar-user">Hi, {user.name ? user.name.split(' ')[0] : 'User'}</span>
-          <button className="navbar-logout" onClick={onLogout}>
-            Log out
+        {showMenuButton && (
+          <button type="button" className="navbar-menu-btn" onClick={onMenuClick} aria-label="Open menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
           </button>
-        </div>
+        )}
+        <Link to="/dashboard" className="navbar-brand">Voicefluence</Link>
       </div>
     </nav>
   );
