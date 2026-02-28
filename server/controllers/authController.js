@@ -31,7 +31,7 @@ exports.signup = async (req, res) => {
     const token = generateToken(user._id);
     res.status(201).json({
       token,
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, onboardingComplete: user.onboardingComplete },
     });
   } catch (err) {
     console.error('Signup error:', err);
@@ -60,7 +60,7 @@ exports.login = async (req, res) => {
     const token = generateToken(user._id);
     res.json({
       token,
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, onboardingComplete: user.onboardingComplete },
     });
   } catch (err) {
     console.error('Login error:', err);

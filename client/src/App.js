@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
 import Navbar from './components/Navbar';
 import api from './services/api';
 
@@ -33,6 +35,13 @@ function App() {
     setUser(null);
   };
 
+  const handleOnboardingComplete = (profileData) => {
+    setUser(profileData);
+  };
+
+  const needsOnboarding = user && !user.onboardingComplete;
+  const defaultRoute = !user ? '/login' : needsOnboarding ? '/onboarding' : '/dashboard';
+
   if (loading) {
     return (
       <div className="loading-screen">
@@ -44,21 +53,53 @@ function App() {
 
   return (
     <Router>
-      {user && <Navbar user={user} onLogout={handleLogout} />}
+      {user && !needsOnboarding && <Navbar user={user} onLogout={handleLogout} />}
       <Routes>
         <Route
           path="/login"
-          element={user ? <Navigate to="/dashboard" /> : <Login onLogin={handleLogin} />}
+          element={user ? <Navigate to={defaultRoute} /> : <Login onLogin={handleLogin} />}
         />
         <Route
           path="/signup"
-          element={user ? <Navigate to="/dashboard" /> : <Signup onLogin={handleLogin} />}
+          element={user ? <Navigate to={defaultRoute} /> : <Signup onLogin={handleLogin} />}
+        />
+        <Route
+          path="/onboarding"
+          element={
+            !user ? (
+              <Navigate to="/login" />
+            ) : needsOnboarding ? (
+              <Onboarding user={user} onComplete={handleOnboardingComplete} />
+            ) : (
+              <Navigate to="/dashboard" />
+            )
+          }
         />
         <Route
           path="/dashboard"
-          element={user ? <Dashboard user={user} setUser={setUser} /> : <Navigate to="/login" />}
+          element={
+            !user ? (
+              <Navigate to="/login" />
+            ) : needsOnboarding ? (
+              <Navigate to="/onboarding" />
+            ) : (
+              <Dashboard user={user} setUser={setUser} />
+            )
+          }
         />
-        <Route path="*" element={<Navigate to={user ? '/dashboard' : '/login'} />} />
+        <Route
+          path="/profile"
+          element={
+            !user ? (
+              <Navigate to="/login" />
+            ) : needsOnboarding ? (
+              <Navigate to="/onboarding" />
+            ) : (
+              <Profile user={user} setUser={setUser} />
+            )
+          }
+        />
+        <Route path="*" element={<Navigate to={defaultRoute} />} />
       </Routes>
     </Router>
   );

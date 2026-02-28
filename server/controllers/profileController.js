@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const styleAnalyzerService = require('../services/styleAnalyzerService');
+const { analyzeLinkedInProfile } = require('../services/linkedinService');
 
 exports.getProfile = async (req, res) => {
   try {
@@ -14,9 +15,10 @@ exports.getProfile = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { linkedinUrl, pastPosts } = req.body;
+    const { name, linkedinUrl, pastPosts } = req.body;
     const update = {};
 
+    if (name !== undefined) update.name = name.trim();
     if (linkedinUrl !== undefined) update.linkedinUrl = linkedinUrl;
     if (pastPosts !== undefined) update.pastPosts = pastPosts;
 
@@ -27,6 +29,62 @@ exports.updateProfile = async (req, res) => {
   } catch (err) {
     console.error('Update profile error:', err);
     res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+exports.fetchProfile = async (req, res) => {
+  try {
+    const { linkedinUrl } = req.body;
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    const urlToUse = linkedinUrl && linkedinUrl.trim() ? linkedinUrl.trim() : user.linkedinUrl;
+    if (!urlToUse) {
+      return res.status(400).json({ error: 'LinkedIn URL is required. Save your profile with a URL first.' });
+    }
+
+    const profileData = await analyzeLinkedInProfile(urlToUse, user.name);
+
+    user.linkedinUrl = urlToUse;
+    user.headline = profileData.headline || '';
+    user.about = profileData.about || '';
+    user.writingStyleProfile = profileData.writingStyleProfile || user.writingStyleProfile;
+    await user.save();
+
+    const updated = await User.findById(req.userId).select('-password');
+    res.json({ profile: updated });
+  } catch (err) {
+    console.error('Fetch profile error:', err);
+    res.status(500).json({ error: 'Failed to fetch and analyze LinkedIn profile. Please try again.' });
+  }
+};
+
+exports.onboard = async (req, res) => {
+  try {
+    const { linkedinUrl } = req.body;
+    if (!linkedinUrl) {
+      return res.status(400).json({ error: 'LinkedIn URL is required.' });
+    }
+
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    const profileData = await analyzeLinkedInProfile(linkedinUrl, user.name);
+
+    user.linkedinUrl = linkedinUrl;
+    user.headline = profileData.headline || '';
+    user.about = profileData.about || '';
+    user.writingStyleProfile = profileData.writingStyleProfile;
+    user.onboardingComplete = true;
+    await user.save();
+
+    const userObj = user.toObject();
+    delete userObj.password;
+
+    res.json({ profile: userObj });
+  } catch (err) {
+    console.error('Onboard error:', err);
+    res.status(500).json({ error: 'Failed to analyze LinkedIn profile. Please try again.' });
   }
 };
 

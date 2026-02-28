@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ProfileSetup from '../components/ProfileSetup';
-import VoiceRecorder from '../components/VoiceRecorder';
+import VoiceAgent from '../components/VoiceAgent';
 import PostOutput from '../components/PostOutput';
 import api from '../services/api';
 import '../styles/dashboard.css';
@@ -18,10 +17,6 @@ function Dashboard({ user, setUser }) {
       .then((res) => setProfile(res.data.profile))
       .catch(() => {});
   }, []);
-
-  const handleProfileUpdate = (updatedProfile) => {
-    setProfile(updatedProfile);
-  };
 
   const handleAudioReady = async (audioBlob) => {
     setError('');
@@ -85,18 +80,15 @@ function Dashboard({ user, setUser }) {
   return (
     <div className="dashboard">
       <div className="dashboard-container">
-        <header className="dashboard-header">
-          <h1>Your LinkedIn Post Studio</h1>
-          <p>Record a voice note. Get an authority-driven LinkedIn post.</p>
-        </header>
-
-        <section className="dashboard-section">
-          <ProfileSetup profile={profile} onUpdate={handleProfileUpdate} />
-        </section>
-
-        <section className="dashboard-section">
-          <VoiceRecorder onAudioReady={handleAudioReady} generating={generating} />
-        </section>
+        {!generatedPost && (
+          <section className="agent-section">
+            <VoiceAgent
+              onAudioReady={handleAudioReady}
+              generating={generating}
+              userName={user.name}
+            />
+          </section>
+        )}
 
         {error && (
           <div className="dashboard-error">
@@ -104,20 +96,25 @@ function Dashboard({ user, setUser }) {
           </div>
         )}
 
-        {generating && (
-          <div className="generating-indicator">
-            <div className="spinner" />
-            <p>Transcribing your voice and crafting your LinkedIn post...</p>
-          </div>
-        )}
-
         {generatedPost && (
-          <section className="dashboard-section">
+          <section className="dashboard-section fade-in">
             <PostOutput
               data={generatedPost}
               onRegenerate={handleRegenerate}
               generating={generating}
             />
+            <div className="new-post-cta">
+              <button
+                className="new-post-btn"
+                onClick={() => {
+                  setGeneratedPost(null);
+                  setTranscriptData(null);
+                  setError('');
+                }}
+              >
+                Create Another Post
+              </button>
+            </div>
           </section>
         )}
       </div>

@@ -18,8 +18,11 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true },
   linkedinUrl: { type: String, default: '' },
+  headline: { type: String, default: '' },
+  about: { type: String, default: '' },
   pastPosts: { type: [String], default: [] },
   writingStyleProfile: { type: writingStyleProfileSchema, default: () => ({}) },
+  onboardingComplete: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
 
