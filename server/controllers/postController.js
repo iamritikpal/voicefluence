@@ -6,13 +6,28 @@ const gcpSpeechService = require('../services/gcpSpeechService');
 const { cleanTranscript } = require('../services/azureClient');
 const postGeneratorService = require('../services/postGeneratorService');
 
+const GENERATION_COST = 5;
+
 exports.generatePost = async (req, res) => {
   try {
-    const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ error: 'User not found.' });
-
     if (!req.file) {
       return res.status(400).json({ error: 'No audio file uploaded.' });
+    }
+
+    // Atomic credit deduction — prevents race conditions
+    const user = await User.findOneAndUpdate(
+      { _id: req.userId, credits: { $gte: GENERATION_COST } },
+      { $inc: { credits: -GENERATION_COST } },
+      { new: true }
+    );
+
+    if (!user) {
+      if (req.file && req.file.path) require('fs').unlink(req.file.path, () => {});
+      return res.status(403).json({
+        error: 'Insufficient credits',
+        credits: 0,
+        required: GENERATION_COST,
+      });
     }
 
     const audioPath = req.file.path;
@@ -50,6 +65,7 @@ exports.generatePost = async (req, res) => {
       rawTranscript,
       cleanedTranscript,
       keyIdeas,
+      creditsRemaining: user.credits,
       ...result,
     });
   } catch (err) {

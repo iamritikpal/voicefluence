@@ -5,6 +5,7 @@ import Signup from './pages/Signup';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import Pricing from './pages/Pricing';
 import Navbar from './components/Navbar';
 import api from './services/api';
 
@@ -56,7 +57,7 @@ function App() {
 
   return (
     <>
-      {user && !needsOnboarding && (
+      {(user && !needsOnboarding || location.pathname === '/pricing') && (
         <Navbar
           showMenuButton={isDashboard}
           onMenuClick={() => setSidebarOpen(true)}
@@ -107,6 +108,7 @@ function App() {
             )
           }
         />
+        <Route path="/pricing" element={<Pricing user={user} setUser={setUser} />} />
         <Route path="*" element={<Navigate to={defaultRoute} />} />
       </Routes>
     </>

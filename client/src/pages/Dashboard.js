@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import VoiceAgent from '../components/VoiceAgent';
 import PostOutput from '../components/PostOutput';
 import DashboardSkeleton from '../components/DashboardSkeleton';
+import UpgradeModal from '../components/UpgradeModal';
 import api from '../services/api';
 import '../styles/dashboard.css';
 
 function Dashboard({ user, setUser, onLogout, sidebarOpen, setSidebarOpen }) {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [postsList, setPostsList] = useState([]);
   const [currentPostId, setCurrentPostId] = useState(null);
@@ -16,6 +19,11 @@ function Dashboard({ user, setUser, onLogout, sidebarOpen, setSidebarOpen }) {
   const [showSkeleton, setShowSkeleton] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [error, setError] = useState('');
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  const credits = user?.credits ?? 0;
+  const plan = user?.subscriptionPlan || 'free';
+  const creditPct = Math.min(100, Math.round((credits / 20) * 100));
 
   const fetchPosts = useCallback(() => {
     api.get('/posts').then((res) => setPostsList(res.data.posts || [])).catch(() => {});
@@ -47,6 +55,10 @@ function Dashboard({ user, setUser, onLogout, sidebarOpen, setSidebarOpen }) {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
+      if (res.data.creditsRemaining !== undefined && setUser) {
+        setUser((prev) => ({ ...prev, credits: res.data.creditsRemaining }));
+      }
+
       setTranscriptData({
         rawTranscript: res.data.rawTranscript,
         cleanedTranscript: res.data.cleanedTranscript,
@@ -65,7 +77,11 @@ function Dashboard({ user, setUser, onLogout, sidebarOpen, setSidebarOpen }) {
         fetchPosts();
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to generate post. Please try again.');
+      if (err.response?.status === 403) {
+        setShowUpgradeModal(true);
+      } else {
+        setError(err.response?.data?.error || 'Failed to generate post. Please try again.');
+      }
     } finally {
       setGenerating(false);
     }
@@ -132,6 +148,10 @@ function Dashboard({ user, setUser, onLogout, sidebarOpen, setSidebarOpen }) {
 
   return (
     <div className="dashboard">
+      {showUpgradeModal && (
+        <UpgradeModal credits={credits} onClose={() => setShowUpgradeModal(false)} />
+      )}
+
       <div className="dashboard-layout">
         <Sidebar
           user={user}
@@ -147,6 +167,39 @@ function Dashboard({ user, setUser, onLogout, sidebarOpen, setSidebarOpen }) {
           onCloseMobile={() => setSidebarOpen(false)}
         />
         <div className="dashboard-main">
+          {/* Credit status bar */}
+          <div className="credit-bar">
+            <div className="credit-bar-left">
+              <span className="credit-bar-label">
+                <span className="credit-bar-icon">⚡</span>
+                {credits} credits
+              </span>
+              <span className={`credit-bar-plan credit-bar-plan--${plan}`}>
+                {plan.toUpperCase()}
+              </span>
+              {credits < 10 && credits > 0 && (
+                <span className="credit-bar-warning">Running low!</span>
+              )}
+              {credits === 0 && (
+                <span className="credit-bar-empty">No credits left</span>
+              )}
+            </div>
+            <div className="credit-bar-right">
+              <div className="credit-progress-track">
+                <div
+                  className="credit-progress-fill"
+                  style={{ width: `${creditPct}%` }}
+                />
+              </div>
+              <button
+                className="credit-upgrade-btn"
+                onClick={() => navigate('/pricing')}
+              >
+                Upgrade
+              </button>
+            </div>
+          </div>
+
           <div className="dashboard-container">
             {!generatedPost && (
               <section className="agent-section">
