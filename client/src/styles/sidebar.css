@@ -161,6 +161,38 @@
   margin: 0;
 }
 
+.sidebar-post-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.5rem 0 0;
+  position: relative;
+}
+
+.sidebar-post-row .sidebar-post-item {
+  flex: 1;
+  min-width: 0;
+  padding-right: 0.5rem;
+}
+
+.sidebar-post-edit-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1.5px solid var(--color-primary);
+  border-radius: 8px;
+  background: var(--color-white);
+  color: var(--color-gray-800);
+  margin: 0.25rem 0.25rem 0.25rem 0;
+}
+
+.sidebar-post-edit-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary-50);
+}
+
 .sidebar-empty {
   padding: 1rem;
   font-size: 0.875rem;
@@ -189,14 +221,28 @@
   border-left-color: var(--color-primary);
 }
 
+.sidebar-post-head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.sidebar-post-pin {
+  flex-shrink: 0;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+}
+
 .sidebar-post-title {
-  display: block;
   font-size: 0.875rem;
   color: var(--color-gray-800);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .sidebar-post-date {

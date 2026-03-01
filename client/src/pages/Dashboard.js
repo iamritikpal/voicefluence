@@ -5,6 +5,7 @@ import VoiceAgent from '../components/VoiceAgent';
 import PostOutput from '../components/PostOutput';
 import DashboardSkeleton from '../components/DashboardSkeleton';
 import UpgradeModal from '../components/UpgradeModal';
+import ConfirmModal from '../components/ConfirmModal';
 import api from '../services/api';
 import '../styles/dashboard.css';
 
@@ -20,6 +21,8 @@ function Dashboard({ user, setUser, onLogout, sidebarOpen, setSidebarOpen }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [error, setError] = useState('');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [deleteConfirmPost, setDeleteConfirmPost] = useState(null);
+  const [logoutConfirm, setLogoutConfirm] = useState(false);
 
   const credits = user?.credits ?? 0;
   const plan = user?.subscriptionPlan || 'free';
@@ -122,6 +125,53 @@ function Dashboard({ user, setUser, onLogout, sidebarOpen, setSidebarOpen }) {
     setError('');
   };
 
+  const handleRenamePost = async (postId, title) => {
+    try {
+      await api.patch(`/posts/${postId}`, { title });
+      fetchPosts();
+      if (currentPostId === postId) {
+        setGeneratedPost((p) => (p ? { ...p } : null));
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to rename.');
+    }
+  };
+
+  const handlePinPost = async (postId, pinned) => {
+    try {
+      await api.patch(`/posts/${postId}`, { pinned });
+      fetchPosts();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to pin.');
+    }
+  };
+
+  const handleDeletePostRequest = (post) => {
+    setDeleteConfirmPost(post);
+  };
+
+  const handleDeletePostConfirm = async () => {
+    if (!deleteConfirmPost) return;
+    try {
+      await api.delete(`/posts/${deleteConfirmPost.id}`);
+      if (currentPostId === deleteConfirmPost.id) {
+        handleNewPost();
+      }
+      fetchPosts();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to delete.');
+    } finally {
+      setDeleteConfirmPost(null);
+    }
+  };
+
+  const handleLogoutClick = () => setLogoutConfirm(true);
+
+  const handleLogoutConfirm = () => {
+    onLogout();
+    setLogoutConfirm(false);
+  };
+
   const handleSelectPost = (id) => {
     if (id === currentPostId) return;
     setGenerating(true);
@@ -152,14 +202,41 @@ function Dashboard({ user, setUser, onLogout, sidebarOpen, setSidebarOpen }) {
         <UpgradeModal credits={credits} onClose={() => setShowUpgradeModal(false)} />
       )}
 
+      {deleteConfirmPost && (
+        <ConfirmModal
+          title="Delete post?"
+          message="This post will be permanently deleted. This cannot be undone."
+          confirmLabel="Yes"
+          cancelLabel="No"
+          confirmVariant="danger"
+          onConfirm={handleDeletePostConfirm}
+          onCancel={() => setDeleteConfirmPost(null)}
+        />
+      )}
+
+      {logoutConfirm && (
+        <ConfirmModal
+          title="Log out?"
+          message="Are you sure you want to log out?"
+          confirmLabel="Yes"
+          cancelLabel="Cancel"
+          confirmVariant="danger"
+          onConfirm={handleLogoutConfirm}
+          onCancel={() => setLogoutConfirm(false)}
+        />
+      )}
+
       <div className="dashboard-layout">
         <Sidebar
           user={user}
-          onLogout={onLogout}
+          onLogout={handleLogoutClick}
           posts={postsList}
           currentPostId={currentPostId}
           onNewPost={handleNewPost}
           onSelectPost={handleSelectPost}
+          onRenamePost={handleRenamePost}
+          onPinPost={handlePinPost}
+          onDeletePost={handleDeletePostRequest}
           loading={generating}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed((c) => !c)}

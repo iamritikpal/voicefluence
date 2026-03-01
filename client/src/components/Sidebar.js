@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import PostOptionsMenu from './PostOptionsMenu';
 import '../styles/sidebar.css';
 
 function formatDate(dateStr) {
@@ -19,6 +20,9 @@ function Sidebar({
   currentPostId,
   onNewPost,
   onSelectPost,
+  onRenamePost,
+  onPinPost,
+  onDeletePost,
   loading,
   collapsed,
   onToggleCollapse,
@@ -26,6 +30,25 @@ function Sidebar({
   onCloseMobile,
 }) {
   const firstName = user && user.name ? user.name.split(' ')[0] : 'User';
+  const [editingPostId, setEditingPostId] = useState(null);
+  const editInputRef = useRef(null);
+
+  useEffect(() => {
+    if (editingPostId && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.select();
+    }
+  }, [editingPostId]);
+
+  const handleStartRename = (post) => {
+    setEditingPostId(post.id);
+  };
+
+  const handleRenameSubmit = (postId, value) => {
+    const t = value.trim().slice(0, 150);
+    if (t) onRenamePost(postId, t);
+    setEditingPostId(null);
+  };
 
   return (
     <>
@@ -94,15 +117,50 @@ function Sidebar({
             <li className="sidebar-empty">No posts yet. Create one with the voice agent.</li>
           )}
           {posts.map((post) => (
-            <li key={post.id}>
-              <button
-                type="button"
-                className={'sidebar-post-item' + (currentPostId === post.id ? ' active' : '')}
-                onClick={() => { onSelectPost(post.id); onCloseMobile(); }}
-              >
-                <span className="sidebar-post-title">{post.title}</span>
-                <span className="sidebar-post-date">{formatDate(post.createdAt)}</span>
-              </button>
+            <li key={post.id} className="sidebar-post-row">
+              {editingPostId === post.id ? (
+                <input
+                  ref={editInputRef}
+                  type="text"
+                  className="sidebar-post-edit-input"
+                  defaultValue={post.title}
+                  onBlur={(e) => handleRenameSubmit(post.id, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.target.blur();
+                    }
+                    if (e.key === 'Escape') {
+                      setEditingPostId(null);
+                    }
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <button
+                  type="button"
+                  className={'sidebar-post-item' + (currentPostId === post.id ? ' active' : '')}
+                  onClick={() => { onSelectPost(post.id); onCloseMobile(); }}
+                >
+                  <span className="sidebar-post-head">
+                    {post.pinned && (
+                      <span className="sidebar-post-pin" title="Pinned">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 17v5" />
+                          <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78 0.9A2 2 0 0 0 5 14.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1.76a2 2 0 0 0-1.11-1.79l-1.78-0.9a2 2 0 0 1-1.11-1.79V7" />
+                        </svg>
+                      </span>
+                    )}
+                    <span className="sidebar-post-title">{post.title}</span>
+                  </span>
+                  <span className="sidebar-post-date">{formatDate(post.createdAt)}</span>
+                </button>
+              )}
+              <PostOptionsMenu
+                post={post}
+                onStartRename={handleStartRename}
+                onPin={onPinPost}
+                onDelete={onDeletePost}
+              />
             </li>
           ))}
         </ul>

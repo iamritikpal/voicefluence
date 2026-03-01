@@ -118,21 +118,72 @@ exports.regeneratePost = async (req, res) => {
   }
 };
 
+function getPostTitle(p) {
+  if (p.title && p.title.trim()) return p.title.trim().slice(0, 80);
+  return (p.finalPost || '').split('\n')[0].slice(0, 60) || 'Untitled post';
+}
+
 exports.listPosts = async (req, res) => {
   try {
     const posts = await Post.find({ userId: req.userId })
-      .sort({ createdAt: -1 })
-      .select('finalPost createdAt')
+      .sort({ pinned: -1, createdAt: -1 })
+      .select('finalPost title pinned createdAt')
       .lean();
     const list = posts.map((p) => ({
       id: p._id,
-      title: (p.finalPost || '').split('\n')[0].slice(0, 60) || 'Untitled post',
+      title: getPostTitle(p),
+      pinned: !!p.pinned,
       createdAt: p.createdAt,
     }));
     res.json({ posts: list });
   } catch (err) {
     console.error('List posts error:', err);
     res.status(500).json({ error: 'Failed to load posts.' });
+  }
+};
+
+exports.updatePost = async (req, res) => {
+  try {
+    const { title, pinned } = req.body;
+    const update = {};
+
+    if (typeof title === 'string') update.title = title.trim().slice(0, 150);
+    if (typeof pinned === 'boolean') update.pinned = pinned;
+
+    if (Object.keys(update).length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update.' });
+    }
+
+    const post = await Post.findOneAndUpdate(
+      { _id: req.params.id, userId: req.userId },
+      update,
+      { new: true }
+    ).lean();
+
+    if (!post) return res.status(404).json({ error: 'Post not found.' });
+
+    res.json({
+      post: {
+        id: post._id,
+        title: getPostTitle(post),
+        pinned: !!post.pinned,
+        createdAt: post.createdAt,
+      },
+    });
+  } catch (err) {
+    console.error('Update post error:', err);
+    res.status(500).json({ error: 'Failed to update post.' });
+  }
+};
+
+exports.deletePost = async (req, res) => {
+  try {
+    const post = await Post.findOneAndDelete({ _id: req.params.id, userId: req.userId });
+    if (!post) return res.status(404).json({ error: 'Post not found.' });
+    res.json({ message: 'Post deleted.' });
+  } catch (err) {
+    console.error('Delete post error:', err);
+    res.status(500).json({ error: 'Failed to delete post.' });
   }
 };
 

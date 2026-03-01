@@ -34,6 +34,8 @@ const upload = multer({
 
 router.get('/', auth, postController.listPosts);
 router.get('/:id', auth, postController.getPost);
+router.patch('/:id', auth, postController.updatePost);
+router.delete('/:id', auth, postController.deletePost);
 router.post('/generate', auth, upload.single('audio'), postController.generatePost);
 router.post('/regenerate', auth, postController.regeneratePost);
 
