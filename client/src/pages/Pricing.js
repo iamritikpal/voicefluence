@@ -56,19 +56,20 @@ function Pricing({ user, setUser }) {
       navigate('/signup');
       return;
     }
+    if (user?.subscriptionPlan === planId) return;
     setLoadingPlan(planId);
     setMessage('');
     setError('');
     try {
-      const res = await api.post('/subscription/upgrade', { plan: planId });
-      if (setUser) {
-        setUser((prev) => ({
-          ...prev,
-          credits: res.data.credits,
-          subscriptionPlan: res.data.subscriptionPlan,
-        }));
+      const res = await api.post('/payments/checkout', {
+        type: 'subscription',
+        plan: planId,
+      });
+      if (res.data.checkoutUrl) {
+        window.location.href = res.data.checkoutUrl;
+      } else {
+        setError('Could not get checkout URL. Please try again.');
       }
-      setMessage(`Successfully upgraded to ${planId.charAt(0).toUpperCase() + planId.slice(1)}! ${res.data.credits} credits available.`);
     } catch (err) {
       setError(err.response?.data?.error || 'Upgrade failed. Please try again.');
     } finally {
@@ -85,11 +86,15 @@ function Pricing({ user, setUser }) {
     setMessage('');
     setError('');
     try {
-      const res = await api.post('/subscription/topup', { package: pkg });
-      if (setUser) {
-        setUser((prev) => ({ ...prev, credits: res.data.credits }));
+      const res = await api.post('/payments/checkout', {
+        type: 'topup',
+        plan: pkg,
+      });
+      if (res.data.checkoutUrl) {
+        window.location.href = res.data.checkoutUrl;
+      } else {
+        setError('Could not get checkout URL. Please try again.');
       }
-      setMessage(res.data.message);
     } catch (err) {
       setError(err.response?.data?.error || 'Top-up failed. Please try again.');
     } finally {

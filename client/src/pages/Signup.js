@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import OtpVerify from '../components/OtpVerify';
 import api from '../services/api';
 import '../styles/auth.css';
 
@@ -9,6 +10,7 @@ function Signup({ onLogin }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,13 +19,17 @@ function Signup({ onLogin }) {
 
     try {
       const res = await api.post('/auth/signup', { name, email, password });
-      onLogin(res.data.user, res.data.token);
+      setPendingEmail(res.data.email);
     } catch (err) {
       setError(err.response?.data?.error || 'Signup failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  if (pendingEmail) {
+    return <OtpVerify email={pendingEmail} onVerified={onLogin} />;
+  }
 
   return (
     <div className="auth-container">

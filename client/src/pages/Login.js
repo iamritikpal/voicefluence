@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import OtpVerify from '../components/OtpVerify';
 import api from '../services/api';
 import '../styles/auth.css';
 
@@ -8,6 +9,7 @@ function Login({ onLogin }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,11 +20,19 @@ function Login({ onLogin }) {
       const res = await api.post('/auth/login', { email, password });
       onLogin(res.data.user, res.data.token);
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed. Please try again.');
+      if (err.response?.data?.needsVerification) {
+        setPendingEmail(err.response.data.email);
+      } else {
+        setError(err.response?.data?.error || 'Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  if (pendingEmail) {
+    return <OtpVerify email={pendingEmail} onVerified={onLogin} />;
+  }
 
   return (
     <div className="auth-container">
@@ -64,6 +74,10 @@ function Login({ onLogin }) {
           <button type="submit" className="auth-btn" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
+
+          <div className="forgot-link">
+            <Link to="/forgot-password">Forgot password?</Link>
+          </div>
         </form>
 
         <p className="auth-switch">

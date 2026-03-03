@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import VoiceAgent from '../components/VoiceAgent';
 import PostOutput from '../components/PostOutput';
@@ -11,6 +11,8 @@ import '../styles/dashboard.css';
 
 function Dashboard({ user, setUser, onLogout, sidebarOpen, setSidebarOpen }) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [paymentBanner, setPaymentBanner] = useState('');
   const [profile, setProfile] = useState(null);
   const [postsList, setPostsList] = useState([]);
   const [currentPostId, setCurrentPostId] = useState(null);
@@ -36,6 +38,25 @@ function Dashboard({ user, setUser, onLogout, sidebarOpen, setSidebarOpen }) {
     api.get('/profile').then((res) => setProfile(res.data.profile)).catch(() => {});
     fetchPosts();
   }, [fetchPosts]);
+
+  useEffect(() => {
+    if (searchParams.get('payment') === 'success') {
+      setPaymentBanner('Payment successful! Your credits will be updated shortly.');
+      searchParams.delete('payment');
+      setSearchParams(searchParams, { replace: true });
+      api.get('/subscription/status').then((res) => {
+        if (setUser) {
+          setUser((prev) => ({
+            ...prev,
+            credits: res.data.credits,
+            subscriptionPlan: res.data.subscriptionPlan,
+          }));
+        }
+      }).catch(() => {});
+      const t = setTimeout(() => setPaymentBanner(''), 8000);
+      return () => clearTimeout(t);
+    }
+  }, []);
 
   useEffect(() => {
     const delay = 500 + Math.random() * 1000;
@@ -244,6 +265,20 @@ function Dashboard({ user, setUser, onLogout, sidebarOpen, setSidebarOpen }) {
           onCloseMobile={() => setSidebarOpen(false)}
         />
         <div className="dashboard-main">
+          {paymentBanner && (
+            <div className="payment-success-banner">
+              <span className="payment-success-icon">✓</span>
+              {paymentBanner}
+              <button
+                type="button"
+                className="payment-success-close"
+                onClick={() => setPaymentBanner('')}
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           {/* Credit status bar */}
           <div className="credit-bar">
             <div className="credit-bar-left">

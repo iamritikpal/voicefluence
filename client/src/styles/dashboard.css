@@ -567,6 +567,47 @@
   transform: translateY(-1px);
 }
 
+/* ===== PAYMENT SUCCESS BANNER ===== */
+.payment-success-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--color-success-light);
+  color: var(--color-success);
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-bottom: 1px solid #6ee7b7;
+  animation: banner-in 0.3s ease;
+}
+
+@keyframes banner-in {
+  from { opacity: 0; transform: translateY(-100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.payment-success-icon {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.payment-success-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--color-success);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.payment-success-close:hover {
+  opacity: 1;
+}
+
 /* ===== CREDIT BAR ===== */
 .credit-bar {
   display: flex;

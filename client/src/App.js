@@ -6,6 +6,7 @@ import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Pricing from './pages/Pricing';
+import ForgotPassword from './pages/ForgotPassword';
 import Navbar from './components/Navbar';
 import api from './services/api';
 
@@ -107,6 +108,10 @@ function App() {
               <Profile user={user} setUser={setUser} />
             )
           }
+        />
+        <Route
+          path="/forgot-password"
+          element={user ? <Navigate to={defaultRoute} /> : <ForgotPassword />}
         />
         <Route path="/pricing" element={<Pricing user={user} setUser={setUser} />} />
         <Route path="*" element={<Navigate to={defaultRoute} />} />

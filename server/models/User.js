@@ -23,7 +23,12 @@ const userSchema = new mongoose.Schema({
   pastPosts: { type: [String], default: [] },
   writingStyleProfile: { type: writingStyleProfileSchema, default: () => ({}) },
   onboardingComplete: { type: Boolean, default: false },
-  credits: { type: Number, default: 20, min: 0 },
+  isVerified: { type: Boolean, default: false },
+  verificationCode: { type: String, default: null },
+  verificationCodeExpires: { type: Date, default: null },
+  resetCode: { type: String, default: null },
+  resetCodeExpires: { type: Date, default: null },
+  credits: { type: Number, default: 0, min: 0 },
   subscriptionPlan: {
     type: String,
     enum: ['free', 'starter', 'pro', 'ultra'],
