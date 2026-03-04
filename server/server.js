@@ -14,20 +14,22 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const app = express();
 
 const allowedOrigins = [
-  "http://localhost:3000",
-  "https://voicefluence.vercel.app",
-  "https://voicefluence-proxy-73gqulicu-ritiks-projects-c9bc00c2.vercel.app",
+  'http://localhost:3000',
+  'https://voicefluence.vercel.app',
+  'https://voicefluence-proxy-73gqulicu-ritiks-projects-c9bc00c2.vercel.app',
+  'https://voicefluence-proxy.vercel.app',
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
 app.use(cors({
-  origin: true,
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (origin.endsWith('.vercel.app')) return callback(null, true);
+    callback(null, false);
+  },
   credentials: true,
-  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
-  allowedHeaders: ["Content-Type","Authorization"]
 }));
-
-app.options("*", cors());
 
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 
@@ -44,7 +46,7 @@ app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/payments', paymentRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok bro', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 app.use((err, req, res, next) => {
