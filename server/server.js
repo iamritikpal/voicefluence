@@ -28,7 +28,10 @@ app.use(cors({
     callback(null, false);
   },
   credentials: true,
+  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization"]
 }));
+app.options('*', cors());
 
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 
