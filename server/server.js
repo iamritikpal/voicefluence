@@ -44,7 +44,7 @@ app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/payments', paymentRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok bro', timestamp: new Date().toISOString() });
 });
 
 app.use((err, req, res, next) => {
