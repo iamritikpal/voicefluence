@@ -13,12 +13,20 @@ const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://voicefluence.vercel.app",
+  "https://voicefluence-proxy-73gqulicu-ritiks-projects-c9bc00c2.vercel.app",
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'https://voicefluence.vercel.app',
-    process.env.CLIENT_URL,
-  ].filter(Boolean),
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (origin.endsWith('.vercel.app')) return callback(null, true);
+    callback(null, false);
+  },
   credentials: true,
 }));
 
