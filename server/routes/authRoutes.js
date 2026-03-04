@@ -40,6 +40,7 @@ router.post('/signup', signupLimiter, authController.signup);
 router.post('/verify-email', verifyLimiter, authController.verifyEmail);
 router.post('/resend-otp', resendLimiter, authController.resendOtp);
 router.post('/login', authController.login);
+router.post('/google', authController.googleAuth);
 router.post('/forgot-password', forgotLimiter, authController.forgotPassword);
 router.post('/verify-reset-code', verifyLimiter, authController.verifyResetCode);
 router.post('/reset-password', verifyLimiter, authController.resetPassword);

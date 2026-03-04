@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import OtpVerify from '../components/OtpVerify';
 import api from '../services/api';
 import '../styles/auth.css';
@@ -27,6 +28,21 @@ function Signup({ onLogin }) {
     }
   };
 
+  const handleGoogleSuccess = useCallback(async (credentialResponse) => {
+    setError('');
+    setLoading(true);
+    try {
+      const res = await api.post('/auth/google', {
+        credential: credentialResponse.credential,
+      });
+      onLogin(res.data.user, res.data.token);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Google sign-up failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [onLogin]);
+
   if (pendingEmail) {
     return <OtpVerify email={pendingEmail} onVerified={onLogin} />;
   }
@@ -43,6 +59,21 @@ function Signup({ onLogin }) {
           <h2>Create your account</h2>
 
           {error && <div className="auth-error">{error}</div>}
+
+          <div className="google-btn-wrapper">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Google sign-up failed. Please try again.')}
+              text="continue_with"
+              shape="rectangular"
+              width="320"
+              logo_alignment="left"
+            />
+          </div>
+
+          <div className="auth-divider">
+            <span>or</span>
+          </div>
 
           <div className="form-group">
             <label htmlFor="name">Full Name</label>

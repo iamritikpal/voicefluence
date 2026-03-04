@@ -78,6 +78,42 @@
   background: var(--color-primary-hover);
 }
 
+/* ===== GOOGLE SIGN-IN ===== */
+.google-btn-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+}
+
+.google-btn-wrapper > div {
+  width: 100% !important;
+  display: flex;
+  justify-content: center;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-gray-200);
+}
+
+.auth-divider span {
+  font-size: 0.8125rem;
+  color: var(--color-gray-400);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .forgot-link {
   text-align: right;
   margin-top: 0.75rem;

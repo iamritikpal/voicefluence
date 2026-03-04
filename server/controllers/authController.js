@@ -1,8 +1,11 @@
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/emailService');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const SALT_ROUNDS = 12;
 const OTP_EXPIRY_MINUTES = 5;
@@ -168,6 +171,10 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
+    if (user.authProvider === 'google' && !user.password) {
+      return res.status(401).json({ error: 'This account uses Google sign-in. Please use "Continue with Google".' });
+    }
+
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
       return res.status(401).json({ error: 'Invalid email or password.' });
@@ -209,6 +216,10 @@ exports.forgotPassword = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user || !user.isVerified) {
+      return res.json({ message: 'If an account exists with that email, a reset code has been sent.' });
+    }
+
+    if (user.authProvider === 'google' && !user.password) {
       return res.json({ message: 'If an account exists with that email, a reset code has been sent.' });
     }
 
@@ -303,9 +314,72 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
+exports.googleAuth = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({ error: 'Google credential is required.' });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, email_verified } = payload;
+
+    if (!email_verified) {
+      return res.status(400).json({ error: 'Google email is not verified.' });
+    }
+
+    let user = await User.findOne({ email });
+
+    if (user) {
+      if (user.authProvider === 'local' && !user.googleId) {
+        user.googleId = googleId;
+        user.authProvider = 'google';
+        if (!user.isVerified) {
+          user.isVerified = true;
+          user.credits = 20;
+          user.verificationCode = null;
+          user.verificationCodeExpires = null;
+        }
+        await user.save();
+      }
+    } else {
+      user = await User.create({
+        name,
+        email,
+        authProvider: 'google',
+        googleId,
+        isVerified: true,
+        credits: 20,
+      });
+    }
+
+    const token = generateToken(user._id);
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        onboardingComplete: user.onboardingComplete,
+        credits: user.credits,
+        subscriptionPlan: user.subscriptionPlan,
+      },
+    });
+  } catch (err) {
+    console.error('Google auth error:', err);
+    res.status(401).json({ error: 'Google authentication failed.' });
+  }
+};
+
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('-password -verificationCode -verificationCodeExpires');
+    const user = await User.findById(req.userId).select('-password -verificationCode -verificationCodeExpires -resetCode -resetCodeExpires -googleId');
     if (!user) return res.status(404).json({ error: 'User not found.' });
     res.json({ user });
   } catch (err) {

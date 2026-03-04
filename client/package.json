@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "@react-oauth/google": "^0.13.4",
     "axios": "^1.7.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
+    "react-loading-skeleton": "^3.5.0",
     "react-router-dom": "^6.28.0",
     "react-scripts": "5.0.1",
     "web-vitals": "^4.2.0"
@@ -15,7 +17,15 @@
     "build": "react-scripts build"
   },
   "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
