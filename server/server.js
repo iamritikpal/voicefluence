@@ -18,6 +18,8 @@ const allowedOrigins = [
   'https://voicefluence.vercel.app',
   'https://voicefluence-proxy-73gqulicu-ritiks-projects-c9bc00c2.vercel.app',
   'https://voicefluence-proxy.vercel.app',
+  'http://app.postflux.tech',
+  'https://postflux.tech',
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
