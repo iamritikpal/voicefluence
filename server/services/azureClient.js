@@ -1,34 +1,45 @@
 const axios = require('axios');
 
-const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT;
 const AZURE_API_KEY = process.env.AZURE_OPENAI_API_KEY;
 const DEPLOYMENT = process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
-const API_VERSION = process.env.AZURE_OPENAI_API_VERSION || '2024-12-01-preview';
+const RESPONSES_URL =process.env.AZURE_OPENAI_RESPONSES_URL;
 
-function getCompletionUrl() {
-  return `${AZURE_ENDPOINT}/openai/deployments/${DEPLOYMENT}/chat/completions?api-version=${API_VERSION}`;
+function extractText(data) {
+  if (data.output && Array.isArray(data.output)) {
+    for (let i = data.output.length - 1; i >= 0; i--) {
+      const item = data.output[i];
+      if (item.content && Array.isArray(item.content)) {
+        const textPart = item.content.find((c) => c && c.text != null);
+        if (textPart) return textPart.text;
+        if (typeof item.content[0] === 'string') return item.content[0];
+        if (item.content[0] && item.content[0].text) return item.content[0].text;
+      }
+      if (typeof item.content === 'string') return item.content;
+      if (item.text != null) return item.text;
+    }
+  }
+  if (data.output_text != null) return data.output_text;
+  throw new Error('Could not extract text from Azure Responses API output');
 }
 
 async function chatCompletion(messages, options = {}) {
-  const { temperature = 0.7, maxTokens = 2000 } = options;
+  const { maxTokens = 2000 } = options;
 
-  const response = await axios.post(
-    getCompletionUrl(),
-    {
-      messages,
-      temperature,
-      max_tokens: maxTokens,
+  const body = {
+    model: DEPLOYMENT,
+    input: messages,
+  };
+  if (maxTokens != null) body.max_output_tokens = maxTokens;
+
+  const response = await axios.post(RESPONSES_URL, body, {
+    headers: {
+      'api-key': AZURE_API_KEY,
+      'Content-Type': 'application/json',
     },
-    {
-      headers: {
-        'api-key': AZURE_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      timeout: 60000,
-    }
-  );
+    timeout: 120000,
+  });
 
-  return response.data.choices[0].message.content;
+  return extractText(response.data);
 }
 
 async function cleanTranscript(rawTranscript) {
@@ -53,7 +64,7 @@ Return ONLY valid JSON in this exact format:
     },
   ];
 
-  const result = await chatCompletion(messages, { temperature: 0.3, maxTokens: 1500 });
+  const result = await chatCompletion(messages, { maxTokens: 1500 });
 
   try {
     const cleaned = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
