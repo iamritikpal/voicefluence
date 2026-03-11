@@ -10,12 +10,12 @@ const transporter = nodemailer.createTransport({
 
 async function sendVerificationEmail(to, otp) {
   const mailOptions = {
-    from: `"Voicefluence" <${process.env.EMAIL_USER}>`,
+    from: `"PostFlux" <${process.env.EMAIL_USER}>`,
     to,
-    subject: 'Verify your Voicefluence account',
+    subject: 'Verify your PostFlux account',
     html: `
       <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">
-        <h1 style="color:#4F46E5;font-size:24px;margin-bottom:8px;">Voicefluence</h1>
+        <h1 style="color:#4F46E5;font-size:24px;margin-bottom:8px;">PostFlux</h1>
         <p style="color:#6B7280;font-size:14px;margin-bottom:24px;">Turn your voice into authority</p>
         <p style="color:#1F2937;font-size:16px;">Your verification code is:</p>
         <div style="background:#EEF2FF;border:2px solid #E0E7FF;border-radius:12px;padding:20px;text-align:center;margin:16px 0 24px;">
@@ -32,12 +32,12 @@ async function sendVerificationEmail(to, otp) {
 
 async function sendPasswordResetEmail(to, otp) {
   const mailOptions = {
-    from: `"Voicefluence" <${process.env.EMAIL_USER}>`,
+    from: `"PostFlux" <${process.env.EMAIL_USER}>`,
     to,
-    subject: 'Reset your Voicefluence password',
+    subject: 'Reset your PostFlux password',
     html: `
       <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">
-        <h1 style="color:#4F46E5;font-size:24px;margin-bottom:8px;">Voicefluence</h1>
+        <h1 style="color:#4F46E5;font-size:24px;margin-bottom:8px;">PostFlux</h1>
         <p style="color:#6B7280;font-size:14px;margin-bottom:24px;">Password reset request</p>
         <p style="color:#1F2937;font-size:16px;">Your password reset code is:</p>
         <div style="background:#EEF2FF;border:2px solid #E0E7FF;border-radius:12px;padding:20px;text-align:center;margin:16px 0 24px;">

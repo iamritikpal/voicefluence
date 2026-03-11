@@ -51,7 +51,7 @@ function App() {
     return (
       <div className="loading-screen">
         <div className="spinner" />
-        <p>Loading Voicefluence...</p>
+        <p>Loading PostFlux...</p>
       </div>
     );
   }
@@ -79,7 +79,7 @@ function App() {
             !user ? (
               <Navigate to="/login" />
             ) : needsOnboarding ? (
-              <Onboarding user={user} onComplete={handleOnboardingComplete} />
+              <Onboarding user={user} onComplete={handleOnboardingComplete} onLogout={handleLogout} />
             ) : (
               <Navigate to="/dashboard" />
             )

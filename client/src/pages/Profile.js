@@ -2,10 +2,19 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import '../styles/profile.css';
 
+const GENDER_OPTIONS = ['man', 'woman', 'non-binary'];
+const AGE_OPTIONS = ['18-20', '21-24', '25-29', '30-40', '41-50', '51-65', '65+'];
+const INDUSTRY_OPTIONS = ['Tech / SaaS', 'Marketing', 'Finance', 'Healthcare', 'Education', 'E-commerce', 'Real Estate', 'Consulting', 'Other'];
+const GOAL_OPTIONS = ['Build personal brand', 'Generate leads', 'Share knowledge', 'Grow network', 'Recruit talent', 'Thought leadership'];
+
 function Profile({ user, setUser }) {
   const [profile, setProfile] = useState(null);
   const [name, setName] = useState('');
   const [linkedinUrl, setLinkedinUrl] = useState('');
+  const [gender, setGender] = useState('');
+  const [ageRange, setAgeRange] = useState('');
+  const [industry, setIndustry] = useState('');
+  const [contentGoal, setContentGoal] = useState('');
   const [saving, setSaving] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -18,6 +27,10 @@ function Profile({ user, setUser }) {
         setProfile(p);
         setName(p.name || '');
         setLinkedinUrl(p.linkedinUrl || '');
+        setGender(p.gender || '');
+        setAgeRange(p.ageRange || '');
+        setIndustry(p.industry || '');
+        setContentGoal(p.contentGoal || '');
       })
       .catch(() => setMessage({ type: 'error', text: 'Failed to load profile.' }));
   }, []);
@@ -27,7 +40,14 @@ function Profile({ user, setUser }) {
     setMessage({ type: '', text: '' });
     setSaving(true);
     try {
-      const res = await api.put('/profile', { name: name.trim(), linkedinUrl: linkedinUrl.trim() });
+      const res = await api.put('/profile', {
+        name: name.trim(),
+        linkedinUrl: linkedinUrl.trim(),
+        gender,
+        ageRange,
+        industry,
+        contentGoal,
+      });
       setProfile(res.data.profile);
       setUser(res.data.profile);
       setMessage({ type: 'success', text: 'Profile saved.' });
@@ -101,6 +121,50 @@ function Profile({ user, setUser }) {
                   className="input-disabled"
                 />
                 <span className="field-hint">Email cannot be changed</span>
+              </div>
+            </div>
+
+            
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="gender">Gender</label>
+                <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)}>
+                  <option value="">Select...</option>
+                  {GENDER_OPTIONS.map((g) => (
+                    <option key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="ageRange">Age range</label>
+                <select id="ageRange" value={ageRange} onChange={(e) => setAgeRange(e.target.value)}>
+                  <option value="">Select...</option>
+                  {AGE_OPTIONS.map((a) => (
+                    <option key={a} value={a}>{a}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="industry">Industry</label>
+                <select id="industry" value={industry} onChange={(e) => setIndustry(e.target.value)}>
+                  <option value="">Select...</option>
+                  {INDUSTRY_OPTIONS.map((ind) => (
+                    <option key={ind} value={ind}>{ind}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="contentGoal">Content goal</label>
+                <select id="contentGoal" value={contentGoal} onChange={(e) => setContentGoal(e.target.value)}>
+                  <option value="">Select...</option>
+                  {GOAL_OPTIONS.map((g) => (
+                    <option key={g} value={g}>{g}</option>
+                  ))}
+                </select>
               </div>
             </div>
 

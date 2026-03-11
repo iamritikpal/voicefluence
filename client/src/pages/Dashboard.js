@@ -94,6 +94,7 @@ function Dashboard({ user, setUser, onLogout, sidebarOpen, setSidebarOpen }) {
         finalPost: res.data.finalPost,
         alternativeVersion: res.data.alternativeVersion,
         suggestedCTA: res.data.suggestedCTA,
+        hashtags: res.data.hashtags || [],
       });
 
       if (res.data.postId) {
@@ -130,6 +131,7 @@ function Dashboard({ user, setUser, onLogout, sidebarOpen, setSidebarOpen }) {
         finalPost: res.data.finalPost,
         alternativeVersion: res.data.alternativeVersion,
         suggestedCTA: res.data.suggestedCTA,
+        hashtags: res.data.hashtags || [],
       });
       fetchPosts();
     } catch (err) {
@@ -207,6 +209,7 @@ function Dashboard({ user, setUser, onLogout, sidebarOpen, setSidebarOpen }) {
           finalPost: p.finalPost,
           alternativeVersion: p.alternativeVersion,
           suggestedCTA: p.suggestedCTA,
+          hashtags: p.hashtags || [],
         });
         setTranscriptData({
           cleanedTranscript: p.cleanedTranscript,

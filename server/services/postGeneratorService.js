@@ -1,5 +1,30 @@
 const { chatCompletion } = require('./azureClient');
 
+function cleanAiSlop(text) {
+  if (!text) return text;
+  return text
+    .replace(/\u2014/g, ' - ')   // em-dash → spaced hyphen
+    .replace(/\u2013/g, ' - ')   // en-dash → spaced hyphen
+    .replace(/--+/g, ' - ')      // double/triple dashes → spaced hyphen
+    .replace(/\u2018|\u2019/g, "'")  // smart single quotes
+    .replace(/\u201C|\u201D/g, '"')  // smart double quotes
+    .replace(/\u2026/g, '...')   // ellipsis char → three dots
+    .replace(/\*\*/g, '')        // bold markdown
+    .replace(/^#{1,6}\s/gm, '')  // markdown headings
+    .replace(/  +/g, ' ')        // collapse multiple spaces
+    .trim();
+}
+
+function cleanResult(result) {
+  return {
+    hookOptions: (result.hookOptions || []).map(cleanAiSlop),
+    finalPost: cleanAiSlop(result.finalPost || ''),
+    alternativeVersion: cleanAiSlop(result.alternativeVersion || ''),
+    suggestedCTA: cleanAiSlop(result.suggestedCTA || ''),
+    hashtags: (result.hashtags || []).map((h) => h.replace(/^#/, '').trim()).filter(Boolean),
+  };
+}
+
 function buildStyleInstructions(profile) {
   if (!profile) {
     return `No writing style profile available. Use a professional, conversational LinkedIn tone.
@@ -21,7 +46,7 @@ Default style:
 - Vocabulary level: ${profile.vocabularyLevel}`;
 }
 
-async function generateLinkedInPost({ cleanedTranscript, keyIdeas, writingStyleProfile, userName, linkedinUrl, selectedHook }) {
+async function generateLinkedInPost({ cleanedTranscript, keyIdeas, writingStyleProfile, userName, linkedinUrl, selectedHook, authorProfile }) {
   const styleInstructions = buildStyleInstructions(writingStyleProfile);
 
   const hookContext = selectedHook
@@ -49,24 +74,36 @@ This positions them as someone sharing wisdom, not bragging.
 
 ${styleInstructions}
 
+FORMATTING RULES:
+- Use simple hyphens (-) for dashes, NEVER em-dashes or en-dashes (never use — or –)
+- Write clean punctuation: no double-dashes (--)
+- No markdown syntax (no **, ##, etc.)
+- No emojis unless the user's style explicitly uses them
+
 STRUCTURE YOUR OUTPUT:
 1. Three different hook options (opening lines) — each should be a distinct style (e.g., story, contrarian, question)
 2. A complete LinkedIn post (150-300 words) using the best hook
 3. An alternative version with a different angle
 4. A suggested CTA that matches the user's style
+5. 4-6 relevant hashtags for the post (without the # symbol, just the words)
 
 Return ONLY valid JSON:
 {
   "hookOptions": ["Hook 1", "Hook 2", "Hook 3"],
   "finalPost": "Complete post with line breaks...",
   "alternativeVersion": "Alternative version...",
-  "suggestedCTA": "Suggested CTA line..."
+  "suggestedCTA": "Suggested CTA line...",
+  "hashtags": ["hashtag1", "hashtag2", "hashtag3", "hashtag4"]
 }`,
     },
     {
       role: 'user',
       content: `Author: ${userName}
 ${linkedinUrl ? `LinkedIn: ${linkedinUrl}` : ''}
+${authorProfile ? `Gender: ${authorProfile.gender || 'Not specified'}
+Age range: ${authorProfile.ageRange || 'Not specified'}
+Industry: ${authorProfile.industry || 'Not specified'}
+Content goal: ${authorProfile.contentGoal || 'Not specified'}` : ''}
 
 Transcript from voice note:
 "${cleanedTranscript}"
@@ -75,7 +112,7 @@ Key ideas extracted:
 ${keyIdeas.map((idea, i) => `${i + 1}. ${idea}`).join('\n')}
 ${hookContext}
 
-Generate the LinkedIn post now.`,
+Generate the LinkedIn post now. Use the author's demographic info to tailor tone, language complexity, and references appropriately.`,
     },
   ];
 
@@ -83,7 +120,7 @@ Generate the LinkedIn post now.`,
 
   try {
     const cleaned = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    return JSON.parse(cleaned);
+    return cleanResult(JSON.parse(cleaned));
   } catch {
     throw new Error('Failed to parse generated post. Please try again.');
   }

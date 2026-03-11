@@ -46,6 +46,12 @@ exports.generatePost = async (req, res) => {
       writingStyleProfile: styleProfile,
       userName: user.name,
       linkedinUrl: user.linkedinUrl,
+      authorProfile: {
+        gender: user.gender,
+        ageRange: user.ageRange,
+        industry: user.industry,
+        contentGoal: user.contentGoal,
+      },
     });
 
     fs.unlink(audioPath, () => {});
@@ -56,6 +62,7 @@ exports.generatePost = async (req, res) => {
       finalPost: result.finalPost || '',
       alternativeVersion: result.alternativeVersion || '',
       suggestedCTA: result.suggestedCTA || '',
+      hashtags: result.hashtags || [],
       cleanedTranscript,
       keyIdeas: keyIdeas || [],
     });
@@ -99,6 +106,12 @@ exports.regeneratePost = async (req, res) => {
       userName: user.name,
       linkedinUrl: user.linkedinUrl,
       selectedHook,
+      authorProfile: {
+        gender: user.gender,
+        ageRange: user.ageRange,
+        industry: user.industry,
+        contentGoal: user.contentGoal,
+      },
     });
 
     const postId = req.body.postId;
@@ -108,6 +121,7 @@ exports.regeneratePost = async (req, res) => {
         finalPost: result.finalPost || '',
         alternativeVersion: result.alternativeVersion || '',
         suggestedCTA: result.suggestedCTA || '',
+        hashtags: result.hashtags || [],
       });
     }
 
@@ -198,6 +212,7 @@ exports.getPost = async (req, res) => {
         finalPost: post.finalPost,
         alternativeVersion: post.alternativeVersion,
         suggestedCTA: post.suggestedCTA,
+        hashtags: post.hashtags || [],
         cleanedTranscript: post.cleanedTranscript,
         keyIdeas: post.keyIdeas || [],
         createdAt: post.createdAt,

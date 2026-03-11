@@ -19,7 +19,10 @@ function Navbar({ onMenuClick, showMenuButton }) {
               </svg>
             </button>
           )}
-          <Link to="/dashboard" className="navbar-brand">Voicefluence</Link>
+          <Link to="/dashboard" className="navbar-brand">
+            <img src="/logo.png" alt="PostFlux" className="navbar-logo" />
+            PostFlux
+          </Link>
         </div>
 
         <button

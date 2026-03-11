@@ -138,7 +138,7 @@ function ForgotPassword() {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h1 className="auth-logo">Voicefluence</h1>
+          <h1 className="auth-logo">PostFlux</h1>
           <p className="auth-subtitle">Turn your voice into authority</p>
         </div>
 

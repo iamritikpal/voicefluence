@@ -15,12 +15,16 @@ exports.getProfile = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, linkedinUrl, pastPosts } = req.body;
+    const { name, linkedinUrl, pastPosts, gender, ageRange, industry, contentGoal } = req.body;
     const update = {};
 
     if (name !== undefined) update.name = name.trim();
     if (linkedinUrl !== undefined) update.linkedinUrl = linkedinUrl;
     if (pastPosts !== undefined) update.pastPosts = pastPosts;
+    if (gender !== undefined) update.gender = gender;
+    if (ageRange !== undefined) update.ageRange = ageRange;
+    if (industry !== undefined) update.industry = industry;
+    if (contentGoal !== undefined) update.contentGoal = contentGoal;
 
     const user = await User.findByIdAndUpdate(req.userId, update, { new: true }).select('-password');
     if (!user) return res.status(404).json({ error: 'User not found.' });
@@ -61,7 +65,7 @@ exports.fetchProfile = async (req, res) => {
 
 exports.onboard = async (req, res) => {
   try {
-    const { linkedinUrl } = req.body;
+    const { linkedinUrl, gender, ageRange, industry, contentGoal } = req.body;
     if (!linkedinUrl) {
       return res.status(400).json({ error: 'LinkedIn URL is required.' });
     }
@@ -75,6 +79,10 @@ exports.onboard = async (req, res) => {
     user.headline = profileData.headline || '';
     user.about = profileData.about || '';
     user.writingStyleProfile = profileData.writingStyleProfile;
+    if (gender) user.gender = gender;
+    if (ageRange) user.ageRange = ageRange;
+    if (industry) user.industry = industry;
+    if (contentGoal) user.contentGoal = contentGoal;
     user.onboardingComplete = true;
     await user.save();
 

@@ -8,6 +8,7 @@ const postSchema = new mongoose.Schema({
   finalPost: { type: String, required: true },
   alternativeVersion: { type: String, default: '' },
   suggestedCTA: { type: String, default: '' },
+  hashtags: { type: [String], default: [] },
   cleanedTranscript: { type: String, default: '' },
   keyIdeas: { type: [String], default: [] },
   createdAt: { type: Date, default: Date.now },

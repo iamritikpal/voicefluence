@@ -90,6 +90,33 @@ function PostOutput({ data, onRegenerate, generating }) {
         </div>
       </div>
 
+      {data.hashtags && data.hashtags.length > 0 && (
+        <div className="hashtags-section">
+          <h3>Suggested Hashtags</h3>
+          <div className="hashtags-container">
+            {data.hashtags.map((tag, i) => (
+              <span
+                key={i}
+                className="hashtag-chip"
+                onClick={() => handleCopy(`#${tag}`, `tag-${i}`)}
+                title="Click to copy"
+              >
+                #{tag}
+                {copiedField === `tag-${i}` && <span className="chip-copied">Copied!</span>}
+              </span>
+            ))}
+          </div>
+          <button
+            className="copy-btn small"
+            onClick={() =>
+              handleCopy(data.hashtags.map((t) => `#${t}`).join(' '), 'all-tags')
+            }
+          >
+            {copiedField === 'all-tags' ? 'Copied!' : 'Copy All Hashtags'}
+          </button>
+        </div>
+      )}
+
       <div className="cta-section">
         <h3>Suggested CTA</h3>
         <div className="cta-card">
