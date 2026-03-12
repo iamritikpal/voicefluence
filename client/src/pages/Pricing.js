@@ -7,7 +7,8 @@ const PLANS = [
   {
     id: 'starter',
     name: 'Starter',
-    price: '₹499',
+    originalPrice: '$19',
+    launchPrice: '$9',
     period: '/month',
     credits: 100,
     support: 'Basic support',
@@ -17,7 +18,8 @@ const PLANS = [
   {
     id: 'pro',
     name: 'Pro',
-    price: '₹999',
+    originalPrice: '$49',
+    launchPrice: '$24',
     period: '/month',
     credits: 300,
     support: 'Priority support',
@@ -28,7 +30,8 @@ const PLANS = [
   {
     id: 'ultra',
     name: 'Ultra',
-    price: '₹1,999',
+    originalPrice: '$129',
+    launchPrice: '$59',
     period: '/month',
     credits: 1000,
     support: 'Premium support',
@@ -38,8 +41,8 @@ const PLANS = [
 ];
 
 const TOPUPS = [
-  { id: 'small', label: '50 Credits', price: '₹199', credits: 50 },
-  { id: 'medium', label: '150 Credits', price: '₹499', credits: 150 },
+  { id: 'small', label: '50 Credits', price: '$9', credits: 50 },
+  { id: 'medium', label: '150 Credits', price: '$19', credits: 150 },
 ];
 
 function Pricing({ user, setUser }) {
@@ -134,8 +137,12 @@ function Pricing({ user, setUser }) {
             <div className="pricing-card-header">
               <h2 className="pricing-plan-name">{plan.name}</h2>
               <div className="pricing-price">
-                <span className="pricing-amount">{plan.price}</span>
+                <div className="pricing-price-row">
+                  <span className="pricing-amount">{plan.launchPrice}</span>
+                  <span className="pricing-original-amount">{plan.originalPrice}</span>
+                </div>
                 <span className="pricing-period">{plan.period}</span>
+                <div className="pricing-launch-offer">🔥 Launch Offer — Limited Time</div>
               </div>
               <p className="pricing-credits-label">{plan.credits} credits / month</p>
             </div>

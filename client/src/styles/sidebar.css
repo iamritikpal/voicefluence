@@ -11,6 +11,10 @@
   z-index: 200;
 }
 
+[data-theme="dark"] .dashboard-sidebar {
+  border-right-color: rgba(255,255,255,0.06);
+}
+
 .sidebar-overlay {
   display: none;
   position: fixed;

@@ -5,7 +5,17 @@
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-gray-50) 50%, #FFF 100%);
+  background:
+    radial-gradient(800px 400px at 30% 20%, rgba(59,130,246,0.08), transparent 70%),
+    radial-gradient(600px 400px at 70% 80%, rgba(59,130,246,0.05), transparent 70%),
+    var(--color-gray-50);
+}
+
+[data-theme="dark"] .auth-container {
+  background:
+    radial-gradient(800px 400px at 30% 20%, rgba(59,130,246,0.12), transparent 70%),
+    radial-gradient(600px 400px at 70% 80%, rgba(59,130,246,0.06), transparent 70%),
+    var(--color-gray-50);
 }
 
 .auth-card {
@@ -15,6 +25,11 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
   padding: 2.5rem 2rem;
+  border: 1px solid var(--color-gray-200);
+}
+
+[data-theme="dark"] .auth-card {
+  border-color: rgba(255,255,255,0.06);
 }
 
 .auth-header {

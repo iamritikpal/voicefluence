@@ -32,6 +32,11 @@
   box-shadow: var(--shadow-md);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
+  border: 1px solid var(--color-gray-200);
+}
+
+[data-theme="dark"] .profile-card {
+  border-color: rgba(255,255,255,0.06);
 }
 
 .profile-card-title {
