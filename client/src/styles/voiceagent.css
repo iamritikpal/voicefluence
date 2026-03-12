@@ -22,9 +22,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  gap: 3rem;
   padding: 3rem 1.5rem 2rem;
   position: relative;
+  /* border:1px solid red; */
 }
 
 .voice-agent[role="button"] {
@@ -415,7 +416,7 @@
 .agent-message {
   text-align: center;
   max-width: 480px;
-  height: 56px;
+  height: 69px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -569,7 +570,8 @@
   }
 
   .voice-agent {
-    padding: 2rem 1rem;
+    /* padding: 2rem 1rem; */
+    /* border:10px solid red; */
   }
 
   .waveform-bars {
