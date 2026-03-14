@@ -1,4 +1,4 @@
-const { chatCompletion } = require('./azureClient');
+const { chatCompletion } = require('./gcpClient');
 
 async function analyzeWritingStyle(pastPosts) {
   const postsText = pastPosts

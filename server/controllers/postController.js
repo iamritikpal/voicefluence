@@ -3,7 +3,7 @@ const path = require('path');
 const User = require('../models/User');
 const Post = require('../models/Post');
 const gcpSpeechService = require('../services/gcpSpeechService');
-const { cleanTranscript } = require('../services/azureClient');
+const { cleanTranscript } = require('../services/gcpClient');
 const postGeneratorService = require('../services/postGeneratorService');
 
 const GENERATION_COST = 5;

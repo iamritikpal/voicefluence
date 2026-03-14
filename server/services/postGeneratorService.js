@@ -1,4 +1,4 @@
-const { chatCompletion } = require('./azureClient');
+const { chatCompletion } = require('./gcpClient');
 
 function cleanAiSlop(text) {
   if (!text) return text;
@@ -64,8 +64,14 @@ CRITICAL RULES:
 - NEVER hallucinate specific numbers, metrics, or claims not in the transcript
 - Only reference what the user actually said
 - Avoid clichés: "In today's fast-paced world", "game-changer", "at the end of the day", "it's not about X, it's about Y" (unless the user literally said it)
-- Avoid emojis unless the user's style profile indicates frequent emoji use
 - Use LinkedIn-native formatting: line breaks between short paragraphs, no headers or markdown
+
+EMOJIS:
+- Use 2-5 relevant emojis in the post to make it feel like a modern LinkedIn post (e.g. in the hook, key points, or CTA). Choose emojis that fit the topic and tone (e.g. 💡 🚀 ✅ 📌 🔥). Do not overdo it; keep it professional and natural.
+
+PROFILE & ONBOARDING CONTEXT (use this in every post):
+- Always use the author's profile details (gender, age range, industry, content goal) and writing style to tailor: tone, vocabulary level, examples, and references. E.g. a "21-24" "Tech / SaaS" user building "personal brand" should get different tone and references than a "45-54" "Healthcare" user aiming for "thought leadership".
+- Weave in their industry and content goal so the post feels personal and aligned with why they are posting.
 
 AUTHORITY REFRAMING LOGIC:
 When the user describes an experience like "I built something" or "I did X":
@@ -78,12 +84,11 @@ FORMATTING RULES:
 - Use simple hyphens (-) for dashes, NEVER em-dashes or en-dashes (never use — or –)
 - Write clean punctuation: no double-dashes (--)
 - No markdown syntax (no **, ##, etc.)
-- No emojis unless the user's style explicitly uses them
 
 STRUCTURE YOUR OUTPUT:
 1. Three different hook options (opening lines) — each should be a distinct style (e.g., story, contrarian, question)
-2. A complete LinkedIn post (150-300 words) using the best hook
-3. An alternative version with a different angle
+2. A complete LinkedIn post (300-500 words) using the best hook. Write a substantial post: expand on the key ideas, add concrete details or examples where appropriate, and ensure the post feels complete and thought-leader quality. Do not write a short or skimpy post.
+3. An alternative version (also 300-500 words) with a different angle
 4. A suggested CTA that matches the user's style
 5. 4-6 relevant hashtags for the post (without the # symbol, just the words)
 
@@ -98,12 +103,13 @@ Return ONLY valid JSON:
     },
     {
       role: 'user',
-      content: `Author: ${userName}
-${linkedinUrl ? `LinkedIn: ${linkedinUrl}` : ''}
-${authorProfile ? `Gender: ${authorProfile.gender || 'Not specified'}
-Age range: ${authorProfile.ageRange || 'Not specified'}
-Industry: ${authorProfile.industry || 'Not specified'}
-Content goal: ${authorProfile.contentGoal || 'Not specified'}` : ''}
+      content: `AUTHOR PROFILE (use this to tailor tone, vocabulary, examples, and content goal):
+- Name: ${userName}
+${linkedinUrl ? `- LinkedIn: ${linkedinUrl}` : ''}
+${authorProfile ? `- Gender: ${authorProfile.gender || 'Not specified'}
+- Age range: ${authorProfile.ageRange || 'Not specified'}
+- Industry: ${authorProfile.industry || 'Not specified'}
+- Content goal: ${authorProfile.contentGoal || 'Not specified'}` : ''}
 
 Transcript from voice note:
 "${cleanedTranscript}"
@@ -112,11 +118,11 @@ Key ideas extracted:
 ${keyIdeas.map((idea, i) => `${i + 1}. ${idea}`).join('\n')}
 ${hookContext}
 
-Generate the LinkedIn post now. Use the author's demographic info to tailor tone, language complexity, and references appropriately.`,
+Generate the LinkedIn post now. Keep the author's profile and onboarding answers in mind: match tone and vocabulary to their age and industry, align the message with their content goal, and use 2-5 relevant emojis so it feels like a real LinkedIn post.`,
     },
   ];
 
-  const result = await chatCompletion(messages, { temperature: 0.8, maxTokens: 2500 });
+  const result = await chatCompletion(messages, { temperature: 0.8, maxTokens: 4000 });
 
   try {
     const cleaned = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();

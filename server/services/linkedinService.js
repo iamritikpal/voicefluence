@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { chatCompletion } = require('./azureClient');
+const { chatCompletion } = require('./gcpClient');
 
 async function extractLinkedInMeta(linkedinUrl) {
   try {
